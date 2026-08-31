@@ -3,10 +3,21 @@ pipeline {
 
     stages {
         stage('Hello') {
+            agent {
+                docker {
+                    image 'alpine:latest'
+                    reuseNode true
+                }
+            }
             steps {
-                echo 'Hello World'
-                sh 'echo "Hello from Jenkins"'
-                sh 'whoami'
+                sh '''
+                    ls -al
+                    node --version
+                    npm --version
+                    npm ci
+                    npm run build
+                    ls -al
+                '''
             }
         }
     }
