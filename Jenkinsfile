@@ -31,8 +31,8 @@ pipeline {
                     npm ci
                     npm run build
                     ls -al
-                    test -f manifest.json || { echo "manifest.json not found!"; exit 1; }
-                    test -f index.html || { echo "index.html not found!"; exit 1; }
+                    test -f build/manifest.json || { echo "manifest.json not found!"; exit 1; }
+                    test -f build/index.html || { echo "index.html not found!"; exit 1; }
                 '''
             }
         }
