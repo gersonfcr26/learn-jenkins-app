@@ -37,23 +37,41 @@ pipeline {
                 '''
             }
         }
-
-        stage("E2E") {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                    reuseNode true
-                    //args '-u root:root' Not recomended to run as an admin user
+        stage('E2E & Deployment') {
+            parallel {
+                stage("E2E") {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                            //args '-u root:root' Not recomended to run as an admin user
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "E2E Stage"
+                            npm  install serve
+                            node_modules/.bin/serve -s build & # Run the server in the background
+                            sleep 10 # Wait for the server to start
+                            npx playwright test --reporter=html --output=e2e-results
+                        '''
+                    }
                 }
-            }
-            steps {
-                sh '''
-                    echo "E2E Stage"
-                    npm  install serve
-                    node_modules/.bin/serve -s build & # Run the server in the background
-                    sleep 10 # Wait for the server to start
-                    npx playwright test --reporter=html --output=e2e-results
-                '''
+                stage('Deploy') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "Deployment Stage"
+                            npm install -g netlify-cli
+                            netlify --version
+                        '''
+                    }
+                }
             }
         }
     }
