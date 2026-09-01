@@ -42,7 +42,7 @@ pipeline {
         }
         stage('E2E & Deployment') {
             parallel {
-                stage("E2E") {
+                stage("Local E2E") {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -52,12 +52,35 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            echo "E2E Stage"
+                            echo "Local E2E Stage"
                             npm  install serve
                             node_modules/.bin/serve -s build & # Run the server in the background
                             sleep 10 # Wait for the server to start
                             npx playwright test --reporter=html --output=e2e-results
                         '''
+                    }
+                    post {
+                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Local', reportTitles: '', useWrapperFileDirectly: true])
+                    }
+                }
+                stage("Prod E2E") {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                            //args '-u root:root' Not recomended to run as an admin user
+                        }
+                    }
+                    environment {
+                        CI_ENVIRONMENT_URL = 'https://sparkly-seahorse-5ec0a5.netlify.app'
+                    }
+                    steps {
+                        sh '''
+                            npx playwright test --reporter=html
+                        '''
+                    }
+                    post {
+                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
                     }
                 }
                 stage('Deploy') {
@@ -84,7 +107,6 @@ pipeline {
     post {
         always {
             junit testResults: '**/jest-results.xml', allowEmptyResults: true
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
         }
     }
 }
