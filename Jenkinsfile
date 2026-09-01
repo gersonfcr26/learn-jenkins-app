@@ -52,7 +52,7 @@ pipeline {
                     npm  install serve
                     node_modules/.bin/serve -s build & // Run the server in the background
                     sleep 10 // Wait for the server to start
-                    npx playwright test
+                    npx playwright test --reporter=html --output=e2e-results
                 '''
             }
         }
