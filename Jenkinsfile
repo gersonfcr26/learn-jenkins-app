@@ -108,7 +108,6 @@ pipeline {
                 }
             }
         }
-        /*
         stage('Deploy Prod') {
             agent {
                 docker {
@@ -126,7 +125,6 @@ pipeline {
                 '''
             }
         }
-        */
     }
 
     post {
