@@ -14,6 +14,7 @@ pipeline {
                     echo "Test Stage"
                     node --version
                     npm --version
+                    npm ci
                     npm test
                 '''
             }
@@ -35,6 +36,12 @@ pipeline {
                     test -f build/index.html || { echo "index.html not found!"; exit 1; }
                 '''
             }
+        }
+    }
+
+    post {
+        always {
+            junit testResults: '**/test-results.xml', allowEmptyResults: true
         }
     }
 }
