@@ -37,6 +37,24 @@ pipeline {
                 '''
             }
         }
+
+        stage("E2E") {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                    //args '-u root:root' Not recomended to run as an admin user
+                }
+            }
+            steps {
+                sh '''
+                    echo "E2E Stage"
+                    npm  install serve
+                    node_modules/.bin/serve -s build
+                    npx playwright test
+                '''
+            }
+        }
     }
 
     post {
