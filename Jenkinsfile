@@ -40,7 +40,7 @@ pipeline {
                 '''
             }
         }
-        stage('E2E & Deployment') {
+        stage('E2E & Staging') {
             parallel {
                 stage("Local E2E") {
                     agent {
@@ -78,7 +78,7 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            npx playwright test --reporter=html
+                            npx playwright test --reporter=html --output=e2e-results
                         '''
                     }
                     post {
@@ -87,7 +87,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy') {
+                stage('Deploy Staging') {
                     agent {
                         docker {
                             image 'node:18-alpine'
@@ -100,10 +100,28 @@ pipeline {
                             npm install netlify-cli --save-dev
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
-                            node_modules/.bin/netlify deploy --dir=build --prod --no-build
+                            node_modules/.bin/netlify deploy --dir=build --no-build
                         '''
                     }
                 }
+            }
+        }
+
+        stage('Deploy Prod') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    echo "Deployment Prod"
+                    npm install netlify-cli --save-dev
+                    node_modules/.bin/netlify --version
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod --no-build
+                '''
             }
         }
     }
