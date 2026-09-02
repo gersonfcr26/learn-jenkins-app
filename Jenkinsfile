@@ -63,7 +63,8 @@ pipeline {
                     steps {
                         sh '''
                             echo "Deployment Stage"
-                            npm install netlify-cli
+                            # pin to v17: v18+ needs Node 20.10+, image only has Node 18
+                            npm install netlify-cli@17
                             npm install node-jq
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
@@ -84,7 +85,8 @@ pipeline {
                     steps {
                         sh '''
                             echo "Deployment Prod"
-                            npm install netlify-cli
+                            # pin to v17: v18+ needs Node 20.10+, image only has Node 18
+                            npm install netlify-cli@17
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
                             node_modules/.bin/netlify deploy --dir=build --prod --no-build
