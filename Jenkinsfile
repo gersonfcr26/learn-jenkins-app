@@ -104,15 +104,16 @@ pipeline {
                     steps {
                         sh '''
                             echo "Local E2E"
+                            echo $CI_ENVIRONMENT_URL
                             npm  install serve
                             node_modules/.bin/serve -s build & # Run the server in the background
                             sleep 10 # Wait for the server to start
-                            npx playwright test --reporter=html --output=e2e-results
+                            npx playwright test --reporter=html,outputFolder=playwright-report-local --output=e2e-results-local
                         '''
                     }
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Local', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report-local', reportFiles: 'index.html', reportName: 'Playwright HTML Report Local', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
@@ -124,18 +125,19 @@ pipeline {
                         }
                     }
                     environment {
-                        CI_ENVIRONMENT_URL = "${env.STAGE_URL}"
+                        CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
                     }
                     steps {
                         sh '''
                             echo "Stage E2E"
-                            #npx playwright test --reporter=html --output=e2e-results
+                            echo $CI_ENVIRONMENT_URL
+                            #npx playwright test --reporter=html,outputFolder=playwright-report-stage --output=e2e-results-stage
                         '''
                     }
                     /*
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Staging', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report-stage', reportFiles: 'index.html', reportName: 'Playwright HTML Report Staging', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                     */
@@ -153,13 +155,14 @@ pipeline {
                     steps {
                         sh '''
                             echo "Prod E2E"
-                            #npx playwright test --reporter=html --output=e2e-results
+                            echo $CI_ENVIRONMENT_URL
+                            #npx playwright test --reporter=html,outputFolder=playwright-report-prod --output=e2e-results-prod
                         '''
                     }
                     /*
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report-prod', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                     */
