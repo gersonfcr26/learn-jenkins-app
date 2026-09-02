@@ -65,13 +65,11 @@ pipeline {
                         }
                     }
                 }
-                /*
                 stage("Prod E2E") {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                             reuseNode true
-                            //args '-u root:root' Not recomended to run as an admin user
                         }
                     }
                     environment {
@@ -84,11 +82,10 @@ pipeline {
                     }
                     post {
                         always {
-                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
-                */
                 stage('Deploy Staging') {
                     agent {
                         docker {
