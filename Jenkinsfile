@@ -99,10 +99,12 @@ pipeline {
                     steps {
                         sh '''
                             echo "Deployment Stage"
-                            npm install netlify-cli --save-dev
+                            npm install netlify-cli
+                            npm install node-jq
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
                             node_modules/.bin/netlify deploy --dir=build --no-build --json > netlify-deploy.json
+                            node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy.json
                         '''
                     }
                 }
@@ -118,7 +120,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Deployment Prod"
-                    npm install netlify-cli --save-dev
+                    npm install netlify-cli
                     node_modules/.bin/netlify --version
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --prod --no-build
