@@ -110,7 +110,7 @@ pipeline {
                             npm  install serve
                             node_modules/.bin/serve -s build & # Run the server in the background
                             sleep 10 # Wait for the server to start
-                            npx playwright test --reporter=html,outputFolder=playwright-report-local --output=e2e-results-local
+                            PLAYWRIGHT_HTML_REPORT=playwright-report-local npx playwright test --reporter=html --output=e2e-results-local
                         '''
                     }
                     post {
@@ -133,7 +133,7 @@ pipeline {
                         sh '''
                             echo "Stage E2E"
                             echo $CI_ENVIRONMENT_URL
-                            #npx playwright test --reporter=html,outputFolder=playwright-report-stage --output=e2e-results-stage
+                            #PLAYWRIGHT_HTML_REPORT=playwright-report-stage npx playwright test --reporter=html --output=e2e-results-stage
                         '''
                     }
                     /*
@@ -158,7 +158,7 @@ pipeline {
                         sh '''
                             echo "Prod E2E"
                             echo $CI_ENVIRONMENT_URL
-                            #npx playwright test --reporter=html,outputFolder=playwright-report-prod --output=e2e-results-prod
+                            #PLAYWRIGHT_HTML_REPORT=playwright-report-prod npx playwright test --reporter=html --output=e2e-results-prod
                         '''
                     }
                     /*
