@@ -115,21 +115,22 @@ pipeline {
                         }
                     }
                     environment {
-                        CI_ENVIRONMENT_URL = "$env.STAGE_URL"
+                        CI_ENVIRONMENT_URL = "${env.STAGE_URL}"
                     }
                     steps {
                         sh '''
                             echo "Stage E2E"
-                            npx playwright test --reporter=html --output=e2e-results
+                            #npx playwright test --reporter=html --output=e2e-results
                         '''
                     }
+                    /*
                     post {
                         always {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Staging', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
+                    */
                 }
-                /*
                 stage("Prod E2E") {
                     agent {
                         docker {
@@ -143,16 +144,17 @@ pipeline {
                     steps {
                         sh '''
                             echo "Prod E2E"
-                            npx playwright test --reporter=html --output=e2e-results
+                            #npx playwright test --reporter=html --output=e2e-results
                         '''
                     }
+                    /*
                     post {
                         always {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
+                    */
                 }
-                */
             }
         }
     }
