@@ -40,52 +40,8 @@ pipeline {
                 '''
             }
         }
-        stage('E2E & Staging') {
+        stage('Deploy') {
             parallel {
-                stage("Local E2E") {
-                    agent {
-                        docker {
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                            reuseNode true
-                            //args '-u root:root' Not recomended to run as an admin user
-                        }
-                    }
-                    steps {
-                        sh '''
-                            echo "Local E2E Stage"
-                            npm  install serve
-                            node_modules/.bin/serve -s build & # Run the server in the background
-                            sleep 10 # Wait for the server to start
-                            npx playwright test --reporter=html --output=e2e-results
-                        '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Local', reportTitles: '', useWrapperFileDirectly: true])
-                        }
-                    }
-                }
-                stage("Prod E2E") {
-                    agent {
-                        docker {
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                            reuseNode true
-                        }
-                    }
-                    environment {
-                        CI_ENVIRONMENT_URL = 'https://sparkly-seahorse-5ec0a5.netlify.app'
-                    }
-                    steps {
-                        sh '''
-                            npx playwright test --reporter=html --output=e2e-results
-                        '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
-                        }
-                    }
-                }
                 stage('Deploy Staging') {
                     agent {
                         docker {
@@ -101,30 +57,104 @@ pipeline {
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
                             node_modules/.bin/netlify deploy --dir=build --no-build --json > netlify-deploy.json
-                            node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy.json
+                        '''
+                    }
+                    script {
+                        env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy.json", returnStdout: true).trim()
+                    }
+                }
+                stage('Deploy Prod') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "Deployment Prod"
+                            npm install netlify-cli
+                            node_modules/.bin/netlify --version
+                            node_modules/.bin/netlify status
+                            node_modules/.bin/netlify deploy --dir=build --prod --no-build
                         '''
                     }
                 }
             }
         }
-        stage('Deploy Prod') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
+        stage('E2E') {
+            parallel {
+                stage("Local E2E") {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                            //args '-u root:root' Not recomended to run as an admin user
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "Local E2E"
+                            npm  install serve
+                            node_modules/.bin/serve -s build & # Run the server in the background
+                            sleep 10 # Wait for the server to start
+                            npx playwright test --reporter=html --output=e2e-results
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Local', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
                 }
-            }
-            steps {
-                sh '''
-                    echo "Deployment Prod"
-                    npm install netlify-cli
-                    node_modules/.bin/netlify --version
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --prod --no-build
-                '''
+                stage("Stage E2E") {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        CI_ENVIRONMENT_URL = "$env.STAGE_URL"
+                    }
+                    steps {
+                        sh '''
+                            echo "Stage E2E"
+                            npx playwright test --reporter=html --output=e2e-results
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Staging', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
+                }
+                /*
+                stage("Prod E2E") {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        CI_ENVIRONMENT_URL = 'https://sparkly-seahorse-5ec0a5.netlify.app'
+                    }
+                    steps {
+                        sh '''
+                            echo "Prod E2E"
+                            npx playwright test --reporter=html --output=e2e-results
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report Production', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
+                }
+                */
             }
         }
-    }
 
     post {
         always {
