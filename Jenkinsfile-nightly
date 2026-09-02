@@ -1,0 +1,12 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Nightly Build Docker Image') {
+            steps {
+                sh '''
+                    echo "Running nightly build"
+                    docker build -t my-playwright .
+                '''
+            }
+        }
