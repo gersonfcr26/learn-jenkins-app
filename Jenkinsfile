@@ -51,6 +51,23 @@ pipeline {
                 '''
             }
         }
+        stage('Deploy Tools') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    echo "Installing deploy tools"
+                    # installed once here to avoid a race: parallel Deploy stages share this workspace
+                    # pin to v17: v18+ needs Node 20.10+, image only has Node 18
+                    npm install netlify-cli@17
+                    npm install node-jq
+                '''
+            }
+        }
         stage('Deploy') {
             parallel {
                 stage('Deploy Staging') {
@@ -63,9 +80,6 @@ pipeline {
                     steps {
                         sh '''
                             echo "Deployment Stage"
-                            # pin to v17: v18+ needs Node 20.10+, image only has Node 18
-                            npm install netlify-cli@17
-                            npm install node-jq
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
                             node_modules/.bin/netlify deploy --dir=build --json > netlify-deploy.json
@@ -85,8 +99,6 @@ pipeline {
                     steps {
                         sh '''
                             echo "Deployment Prod"
-                            # pin to v17: v18+ needs Node 20.10+, image only has Node 18
-                            npm install netlify-cli@17
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
                             node_modules/.bin/netlify deploy --dir=build --prod
