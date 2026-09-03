@@ -68,7 +68,7 @@ pipeline {
                             npm install node-jq
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
-                            node_modules/.bin/netlify deploy --dir=build --no-build --json > netlify-deploy.json
+                            node_modules/.bin/netlify deploy --dir=build --json > netlify-deploy.json
                         '''
                         script {
                             env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy.json", returnStdout: true).trim()
@@ -89,7 +89,7 @@ pipeline {
                             npm install netlify-cli@17
                             node_modules/.bin/netlify --version
                             node_modules/.bin/netlify status
-                            node_modules/.bin/netlify deploy --dir=build --prod --no-build
+                            node_modules/.bin/netlify deploy --dir=build --prod
                         '''
                     }
                 }
