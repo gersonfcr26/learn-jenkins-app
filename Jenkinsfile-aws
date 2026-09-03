@@ -21,6 +21,8 @@ pipeline {
                         echo "AWS Stage"
                         aws --version
                         aws s3 ls
+                        echo "Hello S3!" > index.html
+                        aws s3 cp index.html s3://learn-jenkins-835263433501-us-east-1-an/index.html
                     '''
                 }
             }
