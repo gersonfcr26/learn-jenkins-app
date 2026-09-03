@@ -8,28 +8,6 @@ pipeline {
     }
 
     stages {
-        stage('AWS') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli'
-                    args "--entrypoint=''"
-                }
-            }
-            environment {
-                AWS_S3_BUCKET = 'learn-jenkins-835263433501-us-east-1-an'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-s3-bucket', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                        echo "AWS Stage"
-                        aws --version
-                        aws s3 ls
-                        echo "Hello S3!" > index.html
-                        aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
-                    '''
-                }
-            }
-        }
         stage('Test') {
             agent {
                 docker {
@@ -65,21 +43,24 @@ pipeline {
                 '''
             }
         }
-        stage('Deploy Tools') {
+        stage('AWS') {
             agent {
                 docker {
-                    image 'node:18-alpine'
-                    reuseNode true
+                    image 'amazon/aws-cli'
+                    args "--entrypoint=''"
                 }
             }
+            environment {
+                AWS_S3_BUCKET = 'learn-jenkins-835263433501-us-east-1-an'
+            }
             steps {
-                sh '''
-                    echo "Installing deploy tools"
-                    # installed once here to avoid a race: parallel Deploy stages share this workspace
-                    # pin to v17: v18+ needs Node 20.10+, image only has Node 18
-                    npm install netlify-cli@17
-                    npm install node-jq
-                '''
+                withCredentials([usernamePassword(credentialsId: 'aws-s3-bucket', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "AWS Stage"
+                        aws --version
+                        aws s3 sync build/ s3://$AWS_S3_BUCKET/
+                    '''
+                }
             }
         }
     }
