@@ -149,14 +149,16 @@ pipeline {
                             echo $CI_ENVIRONMENT_URL
                             curl -sS -o page.html -w "HTTP status: %{http_code}\\n" "$CI_ENVIRONMENT_URL"
                             head -c 500 page.html
-                            PLAYWRIGHT_HTML_REPORT=playwright-report-stage npx playwright test --reporter=html --output=e2e-results-stage
+                            #PLAYWRIGHT_HTML_REPORT=playwright-report-stage npx playwright test --reporter=html --output=e2e-results-stage
                         '''
                     }
+                    /*
                     post {
                         always {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report-stage', reportFiles: 'index.html', reportName: 'Playwright HTML Report Staging', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
+                    */
                 }
                 stage("Prod E2E") {
                     agent {
