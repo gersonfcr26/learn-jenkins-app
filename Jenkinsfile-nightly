@@ -6,7 +6,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Running nightly build"
-                    docker build -t my-playwright .
+                    docker build -f ci/Dockerfile -t my-playwright .
                 '''
             }
         }

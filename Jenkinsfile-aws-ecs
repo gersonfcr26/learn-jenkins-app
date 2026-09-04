@@ -75,6 +75,11 @@ pipeline {
                 '''
             }
         }
+        stage('Docker Image') {
+            steps {
+                sh 'docker build -t my-jenkins-app .'
+            }
+        }
     }
 
     post {
