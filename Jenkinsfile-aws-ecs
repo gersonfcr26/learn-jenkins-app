@@ -40,6 +40,7 @@ pipeline {
                                 echo "AWS Register"
                                 aws --version
                                 aws ecs register-task-definition --cli-input-json file://aws/task-definition.json
+                                aws ecs update-service --cluster learn-jenkins-app-cluster --service LearnJenkinsApp-service-prod --task-definition LearnJenkinsApp-TaskDefinition:2
                             '''
                         }
                     }
