@@ -9,54 +9,6 @@ pipeline {
     }
 
     stages {
-        stage('Preparing') {
-            parallel {
-                stage('Test') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        sh '''
-                            echo "Test Stage"
-                            node --version
-                            npm --version
-                            npm ci
-                            npm test
-                        '''
-                    }
-                }
-                stage('Register to AWS') {
-                    agent {
-                        docker {
-                            image 'amazon/aws-cli'
-                            reuseNode true
-                            args "-u root --entrypoint=''"
-                        }
-                    }
-                    steps {
-                        withCredentials([usernamePassword(credentialsId: 'aws-s3-bucket', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                            sh '''
-                                echo "AWS Register"
-                                aws --version
-
-                                # Use JQ to modify the task definition JSON if needed
-                                yum install -y jq
-
-
-                                LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition.json | jq '.taskDefinition.revision')
-                                echo $LATEST_TD_REVISION
-                                aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE --task-definition LearnJenkinsApp-TaskDefinition:$LATEST_TD_REVISION
-
-                                aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE
-                            '''
-                        }
-                    }
-                }
-            }
-        }
         stage('Build') {
             agent {
                 docker {
@@ -78,16 +30,37 @@ pipeline {
         stage('Docker Image') {
             agent {
                 docker {
-                    image 'amazon/aws-cli'
+                    image 'my-aws-cli'
                     reuseNode true
                     args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
                 }
             }
             steps {
                 sh '''
-                    amazon-linux-extras install docker -y
                     docker build -t my-jenkins-app .
                 '''
+            }
+        }
+        stage('Register to AWS') {
+            agent {
+                docker {
+                    image 'my-aws-cli'
+                    reuseNode true
+                    args "-u root --entrypoint=''"
+                }
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-s3-bucket', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        echo "AWS Register"
+                        aws --version
+
+                        LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition.json | jq '.taskDefinition.revision')
+                        echo $LATEST_TD_REVISION
+                        aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE --task-definition LearnJenkinsApp-TaskDefinition:$LATEST_TD_REVISION
+                        aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE
+                    '''
+                }
             }
         }
     }
